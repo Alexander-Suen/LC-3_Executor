@@ -1,4 +1,4 @@
 ﻿  LC3_Executor_v0.5.cpp
-E:\Projects\LC3_Executor\LC3_Executor_v0.5\LC3_Executor_v0.5\LC3_Executor_v0.5.cpp(254,40): warning C4244: 'argument': conversion from 'unsigned __int64' to 'int', possible loss of data
-E:\Projects\LC3_Executor\LC3_Executor_v0.5\LC3_Executor_v0.5\LC3_Executor_v0.5.cpp(275,82): warning C4244: '=': conversion from 'unsigned __int64' to 'int', possible loss of data
+E:\Projects\LC3_Executor\LC3_Executor_v0.5\LC3_Executor_v0.5\LC3_Executor_v0.5.cpp(317,40): warning C4244: 'argument': conversion from 'unsigned __int64' to 'int', possible loss of data
+E:\Projects\LC3_Executor\LC3_Executor_v0.5\LC3_Executor_v0.5\LC3_Executor_v0.5.cpp(338,82): warning C4244: '=': conversion from 'unsigned __int64' to 'int', possible loss of data
   LC3_Executor_v0.5.vcxproj -> E:\Projects\LC3_Executor\LC3_Executor_v0.5\x64\Debug\LC3_Executor_v0.5.exe

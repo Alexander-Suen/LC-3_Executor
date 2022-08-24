@@ -26,23 +26,7 @@ public:
 	int reg_value;
 
 	int SetValue(int value);
-	int GetValue(int reg_num);
-	int GetCondition();
-	// Instruction declaration
-
-	void BR(string str);
-	void ADD(string str);
-	void LD(string str);
-	void ST(string str);
-	void JSR_JSRR(string str);
-	void AND(string str);
-	void LDR(string str);
-	void STR(string str);
-	void NOT(string str);
-	void LDI(string str);
-	void STI(string str);
-	void RET(string str);
-	void LEA(string str);
+	int GetValue(int reg_num); // reg_num not required
 
 };
 
@@ -61,15 +45,6 @@ int Reg::GetValue(int reg_num) {
 	return reg_value;
 }
 
-int Reg::GetCondition() {
-	if (reg_value > 0) {
-		return 1;
-	} else if (reg_value == 0) {
-		return 0;
-	} else {
-		return -1;
-	}
-}
 
 // Get the number from the substring
 int GetNum(string str) {
@@ -81,69 +56,28 @@ int GetNum(string str) {
 	return sum_num;
 }
 
+// Get the condition code from the former instruction
+int GetCondition(int ins_count, const string instruction[], const Reg registers[]) {
+	ins_count--; // Get the former instruction
+	//cout << "GetCondition(): ins_count = " << ins_count << ", registers[GetNum(instruction[ins_count].substr(4, 3))] = " << registers[GetNum(instruction[ins_count].substr(4, 3))].reg_value << endl;
+
+	if (registers[GetNum(instruction[ins_count].substr(4, 3))].reg_value > 0) {
+		return 1;
+	}
+	else if (registers[GetNum(instruction[ins_count].substr(4, 3))].reg_value == 0) {
+		return 0;
+	}
+	else {
+		return -1;
+	}
+}
+
 
 void PrintOut(Reg* registers) {
 	for (int i = 0; i < 8; i++) {
 		printf("R%d = x%04hX\n", i, registers[i].GetValue(i));
 	}
 }
-
-
-// Instruction implementation
-void Reg::BR(string str) {
-
-}
-
-void Reg::ADD(string str) {
-
-}
-
-void Reg::LD(string str) {
-
-}
-
-void Reg::ST(string str) {
-
-}
-
-void Reg::JSR_JSRR(string str) {
-
-}
-
-void Reg::AND(string str) {
-
-}
-
-void Reg::LDR(string str) {
-
-}
-
-void Reg::STR(string str) {
-
-}
-
-void Reg::NOT(string str) {
-	
-	
-
-}
-
-void Reg::LDI(string str) {
-
-}
-
-void Reg::STI(string str) {
-
-}
-
-void Reg::RET(string str) {
-
-}
-
-void Reg::LEA(string str) {
-
-}
-
 
 
 // Calculate sum of the first four bits of an instruction
@@ -180,7 +114,8 @@ int main() {
 	int offset6 = 0; // LDR, STR
 	int incre_num = 0; // LDI, increment number
 	int BaseR = 0; // JMP, JSRR, LDR, STR
-	int condition_code = 0;
+	int condition_code = 2; // default condition code = 2
+	int temp_ins_count = 0; // BR
 
 	//string str;
 	string instruction[100];
@@ -210,19 +145,46 @@ int main() {
 		ins_count++;
 		switch (BitHash(instruction[ins_count])) {
 		case 0: // BR (0000)
+			//cout << "BR" << endl;
+			condition_code = GetCondition(ins_count, instruction, registers); // Get condition code
+			//cout << "condition_code = " << condition_code << endl;
+
+			//temp_ins_count = ins_count--;
+			//if (registers[GetNum(instruction[temp_ins_count].substr(4, 3))].GetValue(GetNum(instruction[temp_ins_count].substr(4, 3))) > 0) {
+			//	cout << "Condition code = 1" << endl;
+			//	condition_code = 1;
+			//} else if (registers[GetNum(instruction[temp_ins_count].substr(4, 3))].GetValue(GetNum(instruction[temp_ins_count].substr(4, 3))) == 0)  {
+			//	cout << "Condition code = 0" << endl;
+			//	condition_code = 0;
+			//} else if (registers[GetNum(instruction[temp_ins_count].substr(4, 3))].GetValue(GetNum(instruction[temp_ins_count].substr(4, 3))) < 0) {
+			//	cout << "Condition code = -1" << endl;
+			//	condition_code = -1;
+			//}
 
 			PCoffset9 = GetNum(instruction[ins_count].substr(7, 9));
-			cout << "BR: PCoffset9 = " << PCoffset9 << endl;
+			//cout << "BR: PCoffset9 = " << PCoffset9 << endl;
+			//cout << "instruction[ins_count] = " << instruction[ins_count] << endl;
 			// trace back to find the conditional code of last instruction
 
+			// BR n z p
 			if (instruction[ins_count][4] == '1') { // BRn
-
+				//cout << "BRn" << endl;
+				if (condition_code == -1) {
+					ins_count += PCoffset9;
+				}
 			} else if (instruction[ins_count][5] == '1') { // BRz
-
+				//cout << "BRz" << endl;
+				if (condition_code == 0) {
+					ins_count += PCoffset9;
+				}
 			} else if (instruction[ins_count][6] == '1') { // BRp
-
-			} else {
-
+				//cout << "BRp" << endl;
+				if (condition_code == 1) {
+					ins_count += PCoffset9;
+				}
+			} else { // n, z, p = 0, 0, 0, unconditionally branch
+				//cout << "BRnzp" << endl;
+				ins_count += PCoffset9; // PC is implemented in "ins_count++"
 			}
 
 			break;
@@ -242,10 +204,10 @@ int main() {
 		case 2: // LD (0010)
 			DR_num = GetNum(instruction[ins_count].substr(4, 3));
 			PCoffset9 = GetNum(instruction[ins_count].substr(7, 9));
-			cout << "LD: PCoffset9 = " << PCoffset9 << ", ins_count = " << ins_count << endl;
-			cout << "LD: instruction[ins_count + PCoffset9 + 1] = " << instruction[ins_count + PCoffset9 + 1] << endl;
-			cout << "LD: GetNum(instruction[ins_count + PCoffset9 + 1]) = " <<
-				GetNum(instruction[ins_count + PCoffset9 + 1]) << endl;
+			//cout << "LD: PCoffset9 = " << PCoffset9 << ", ins_count = " << ins_count << endl;
+			//cout << "LD: instruction[ins_count + PCoffset9 + 1] = " << instruction[ins_count + PCoffset9 + 1] << endl;
+			//cout << "LD: GetNum(instruction[ins_count + PCoffset9 + 1]) = " <<
+			//	GetNum(instruction[ins_count + PCoffset9 + 1]) << endl;
 			registers[DR_num].SetValue(GetNum(instruction[ins_count + PCoffset9 + 1]));
 			break;
 		case 3: // ST (0011)
@@ -273,10 +235,10 @@ int main() {
 			DR_num = GetNum(instruction[ins_count].substr(4, 3));
 			BaseR = GetNum(instruction[ins_count].substr(7, 3));
 			offset6 = GetNum(instruction[ins_count].substr(10, 6));
-			cout << "LDR: DR_num = " << DR_num << ", BaseR = " << BaseR << ", offset6 = " << offset6 << endl;
-			printf("LDR: R2 value = x%04X\n", registers[BaseR].GetValue(BaseR)); // format print
-			cout << "LDR: instruction[ins_count + registers[BaseR].GetValue(BaseR) + offset6 - 0x7777] = " <<
-				instruction[ins_count + registers[BaseR].GetValue(BaseR) + offset6 - 0x7777] << endl;
+			//cout << "LDR: DR_num = " << DR_num << ", BaseR = " << BaseR << ", offset6 = " << offset6 << endl;
+			//printf("LDR: R2 value = x%04X\n", registers[BaseR].GetValue(BaseR)); // format print
+			//cout << "LDR: instruction[ins_count + registers[BaseR].GetValue(BaseR) + offset6 - 0x7777] = " <<
+			//	instruction[ins_count + registers[BaseR].GetValue(BaseR) + offset6 - 0x7777] << endl;
 			//cout << "LDR: R2 value = " << registers[BaseR].GetValue(BaseR) << endl;
 			// Convert 16-bit string to int (hexadecimal) by "strtoull(string.c_str(), NULL, 2)
 			registers[DR_num].SetValue( strtoull(instruction[ins_count + registers[BaseR].GetValue(BaseR) + offset6 - 0x7777].c_str(), NULL, 2) );
@@ -296,12 +258,12 @@ int main() {
 		case 10: // LDI (1010)
 			DR_num = GetNum(instruction[ins_count].substr(4, 3));
 			PCoffset9 = GetNum(instruction[ins_count].substr(7, 9));
-			cout << "LDI: PCoffset9 = " << PCoffset9 << ", ins_count = " << ins_count << endl;
-			cout << "LDI: instruction[ins_count + PCoffset9 + 1] = " << instruction[ins_count + PCoffset9 + 1] << endl;
-			cout << "LDI: GetNum(instruction[ins_count + PCoffset9 + 1]) = " << GetNum(instruction[ins_count + PCoffset9 + 1]) << endl; // Error: 
-			cout << "LDI: strtoull(str.c_str(), NULL, 2) = " << strtoull(instruction[ins_count + PCoffset9 + 1].c_str(), NULL, 2) << endl;
+			//cout << "LDI: PCoffset9 = " << PCoffset9 << ", ins_count = " << ins_count << endl;
+			//cout << "LDI: instruction[ins_count + PCoffset9 + 1] = " << instruction[ins_count + PCoffset9 + 1] << endl;
+			//cout << "LDI: GetNum(instruction[ins_count + PCoffset9 + 1]) = " << GetNum(instruction[ins_count + PCoffset9 + 1]) << endl; // Error: 
+			//cout << "LDI: strtoull(str.c_str(), NULL, 2) = " << strtoull(instruction[ins_count + PCoffset9 + 1].c_str(), NULL, 2) << endl;
 			incre_num = strtoull(instruction[ins_count + PCoffset9 + 1].c_str(), NULL, 2) - 0x7777; // get relative address
-			cout << "LDI: strtoull(str.c_str(), NULL, 2) = " << incre_num << endl; // increment number
+			//cout << "LDI: strtoull(str.c_str(), NULL, 2) = " << incre_num << endl; // increment number
 			registers[DR_num].SetValue( GetNum( instruction[ins_count + incre_num])); // Load address indirectly
 			break;
 		case 11: // STI (1011)
@@ -316,12 +278,12 @@ int main() {
 		case 14: // LEA (1110), load effect address
 			DR_num = GetNum(instruction[ins_count].substr(4, 3));
 			PCoffset9 = GetNum(instruction[ins_count].substr(7, 9));
-			cout << "LEA: DR_num = " << DR_num << ", PCoffset9 = " << PCoffset9 << endl;
+			//cout << "LEA: DR_num = " << DR_num << ", PCoffset9 = " << PCoffset9 << endl;
 			registers[DR_num].SetValue(0x7777 + ins_count + PCoffset9);
 			break;
 		case 15:
 			PrintOut(registers);
-			cout << "Total number of instructions: " << ins_count + 1 << endl; // instruction counter
+			//cout << "Total number of valid instructions: " << total_count - 1 << endl; // instruction counter, ignoring the empty instruction
 			exit(0);
 			break;
 		default:
@@ -329,6 +291,9 @@ int main() {
 			break;
 		} // switch
 
+		//cout << "Instruction " << ins_count << ":" << endl;
+		//PrintOut(registers);
+		//cout << endl;
 
 	} // while
 
