@@ -2,7 +2,7 @@
 /**
 * @name LC-3 Executor
 *
-* @file Prac1.cpp
+* @file LC3_Executor_v0.5.cpp
 *
 * @brief This file includes the LC-3 executor assignment for Lab6
 * of the course Introduction to Computing Systems
@@ -174,11 +174,12 @@ int main() {
 	int ins_count = -1;
 	int total_count = 0;
 
-	// read all the instructions
+	// Read all the instructions
+	// Input should be ended with an empty line (\n) rather than HALT.
 	while (1) {
 		ins_count++;
 		getline(cin, instruction[ins_count]);
-		if (BitHash(instruction[ins_count]) == 15) {
+		if (instruction[ins_count] == "") {
 			total_count = ins_count + 1;
 			break;
 		}
@@ -214,7 +215,11 @@ int main() {
 		case 2: // LD (0010)
 			DR_num = GetNum(instruction[ins_count].substr(4, 3));
 			PCoffset9 = GetNum(instruction[ins_count].substr(7, 9));
-
+			cout << "LD: PCoffset9 = " << PCoffset9 << ", ins_count = " << ins_count << endl;
+			cout << "LD: instruction[ins_count + PCoffset9 + 1] = " << instruction[ins_count + PCoffset9 + 1] << endl;
+			cout << "LD: GetNum(instruction[ins_count + PCoffset9 + 1]) = " <<
+				GetNum(instruction[ins_count + PCoffset9 + 1]) << endl;
+			registers[DR_num].SetValue(GetNum(instruction[ins_count + PCoffset9 + 1]));
 			break;
 		case 3: // ST (0011)
 
@@ -251,7 +256,14 @@ int main() {
 			registers[DR_num].SetValue(~registers[SR1_num].GetValue(SR1_num));
 			break;
 		case 10: // LDI (1010)
-
+			DR_num = GetNum(instruction[ins_count].substr(4, 3));
+			PCoffset9 = GetNum(instruction[ins_count].substr(7, 9));
+			cout << "LDI: PCoffset9 = " << PCoffset9 << ", ins_count = " << ins_count << endl;
+			cout << "LDI: instruction[ins_count + PCoffset9 + 1] = " << instruction[ins_count + PCoffset9 + 1] << endl;
+			cout << "LDI: GetNum(instruction[ins_count + PCoffset9 + 1]) = " <<
+				GetNum(instruction[ins_count + PCoffset9 + 1]) << endl;
+			cout << "LDI: GetNum( instruction[  GetNum(instruction[ins_count + PCoffset9 + 1])  ] ) = " << GetNum(instruction[ GetNum(instruction[ins_count + PCoffset9 + 1]) - 0x7777 ]) << endl;
+			registers[DR_num].SetValue( GetNum( instruction[  GetNum(instruction[ins_count + PCoffset9 + 1])  ] ) - 0x7777 );
 			break;
 		case 11: // STI (1011)
 
