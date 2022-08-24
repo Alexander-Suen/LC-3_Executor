@@ -216,7 +216,18 @@ int main() {
 
 			break;
 		case 4: // JSR_JSRR (0100)
+			if (instruction[ins_count][4] == '1') { // JSR
+				PCoffset11 = GetNum(instruction[ins_count].substr(5, 11));
+				//cout << "PCoffset11 = " << PCoffset11 << endl;
+				registers[7].SetValue(0x7777 + ins_count + 1);
+				ins_count += PCoffset11;
 
+			} else { // instruction[ins_count][4] == '0', JSRR
+				BaseR = GetNum(instruction[ins_count].substr(7, 3));
+				//cout << "BaseR = " << BaseR << endl;
+				registers[7].SetValue(0x7777 + ins_count + 1);
+				ins_count = registers[BaseR].GetValue(BaseR) - 0x7777 - 1; // No PC
+			}
 			break;
 		case 5: // AND (0101)
 			DR_num = GetNum(instruction[ins_count].substr(4, 3));
@@ -269,8 +280,11 @@ int main() {
 		case 11: // STI (1011)
 
 			break;
-		case 12: // RET (1100)
-
+		case 12: // JMP, RET (1100)
+			BaseR = GetNum(instruction[ins_count].substr(7, 3));
+			//cout << "BaseR = " << BaseR << endl;
+			ins_count = ins_count + registers[BaseR].GetValue(BaseR) - 0x7777 - 2;
+			//cout << "ins_count = " << ins_count << endl;
 			break;
 		case 13: // reserved (1101)
 			cout << "Reserved, 1101" << endl;

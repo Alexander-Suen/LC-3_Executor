@@ -1,0 +1,123 @@
+
+/* BR */
+// former instruction: ins_count--; instruction[ins_count];
+// destination register number: GetNum(instruction[ins_count].substr(4, 3))
+// instruction result (DR value): registers[GetNum(instruction[ins_count].substr(4, 3))].GetValue()
+
+// BRz PC + 1
+0001001010000011 // ADD R1, R2, R3 // R1 = R2 + R3 = 0x7777 + 0x7777 = 0xEEEE
+0000001000000001
+0001101110101100 //// ADD R5, R6, 0x04 // R5 = 0x7777 + 0x0C = 0x7783
+1111000000100101
+/**********************/
+0001001010000011
+0000001000000001
+0001101110101100
+1111000000100101
+/* Result
+R0 = x7777
+R1 = xEEEE
+R2 = x7777
+R3 = x7777
+R4 = x7777
+R5 = x7777
+R6 = x7777
+R7 = x7777
+*/
+
+
+/* JMP, RET (1100) */
+// BaseR = 6, ins_count = 1
+// value of BaseR: registers[BaseR].GetValue() = x777C
+// ins_count + x777C - x7777 - 2
+// ins_count = ins_count + registers[BaseR].GetValue() - x7777 - 2
+
+0001110110100101 // ADD R6, R6, #5
+1100000110000000 // JMP, BaseR = R6
+0001001010000011
+0000001000000001
+0001101110101100
+1111000000100101 // x777C
+/***************/
+0001110110100101
+1100000110000000
+0001001010000011
+0000001000000001
+0001101110101100
+1111000000100101
+/* Result
+R0 = x7777
+R1 = x7777
+R2 = x7777
+R3 = x7777
+R4 = x7777
+R5 = x7777
+R6 = x777C
+R7 = x7777
+*/
+
+/* JSR, JSRR */
+// instruction[ins_count][4] = '1'
+// Address of the next instruction: 0x7777 + ins_count + 1
+// R7 = address // registers[7].SetValue(0x7777 + ins_count + 1)
+0001110110100101 // ADD R6, R6, #5, R6 = 0x777C
+0100100000000010 // JSR, 1, PCoffset11 = #2
+0001001010000011 // .x7779 // R7 = 0x7779
+0001110110100101 // ADD R6, R6, #5 (not executed)
+0001101110101100 // ADD R5, R6, #12 // R5 = R6 + #12 = 0x7788
+1111000000100101 // .x777C
+/**********************/
+0001110110100101
+0100100000000010
+0001001010000011
+0001110110100101
+0001101110101100
+1111000000100101
+/* Result
+R0 = x7777
+R1 = x7777
+R2 = x7777
+R3 = x7777
+R4 = x7777
+R5 = x7788
+R6 = x777C
+R7 = x7779
+*/
+
+
+/* JSR */
+// instruction[ins_count][4] = '0'
+// BaseR = #6 = register number
+// R7 = 0x7779
+// value in BaseR: registers[BaseR].GetValue() = 0x777C
+// ins_count = 1
+// jump to .x777C, HALT // JUMP TO: instruction[0x777C - 0x7777] // ins_count = registers[BaseR].GetValue(BaseR) - 0x7777 - 1 // No PC
+0001110110100101 // ADD R6, R6, #5, R6 = 0x777C
+0100000110000000 // '0'
+0001001010000011 // .x7779 // R7 = 0x7779
+0001110110100101 // ADD R6, R6, #5 (not executed)
+0001101110101100 // ADD R5, R6, #12 // R5 = R6 + #12 = 0x7788 (not executed)
+1111000000100101 // .x777C
+/***************************/
+0001110110100101
+0100000110000000
+0001001010000011
+0001110110100101
+0001101110101100
+1111000000100101
+/* Result
+R0 = x7777
+R1 = x7777
+R2 = x7777
+R3 = x7777
+R4 = x7777
+R5 = x7777
+R6 = x777C
+R7 = x7779
+*/
+
+
+
+
+
+
