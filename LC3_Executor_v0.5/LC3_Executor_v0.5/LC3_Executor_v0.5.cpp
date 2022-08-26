@@ -56,6 +56,19 @@ int GetNum(string str) {
 	return sum_num;
 }
 
+// Get the 2's complement number for offset value
+int GetCompNum(string str) {
+	int sum_num = 0;
+	if (str[0] == 0) { // positive
+		for (int i = 0; i < str.length(); i++) {
+			sum_num += (int)((str[i] - '0') * pow(2, str.length() - 1 - i));
+		}
+		return sum_num;
+	} else { // negative
+
+	}
+}
+
 // Get the condition code from the former instruction
 int GetCondition(int ins_count, const string instruction[], const Reg registers[]) {
 	ins_count--; // Get the former instruction
@@ -161,7 +174,7 @@ int main() {
 			//	condition_code = -1;
 			//}
 
-			PCoffset9 = GetNum(instruction[ins_count].substr(7, 9));
+			PCoffset9 = GetCompNum(instruction[ins_count].substr(7, 9));
 			//cout << "BR: PCoffset9 = " << PCoffset9 << endl;
 			//cout << "instruction[ins_count] = " << instruction[ins_count] << endl;
 			// trace back to find the conditional code of last instruction

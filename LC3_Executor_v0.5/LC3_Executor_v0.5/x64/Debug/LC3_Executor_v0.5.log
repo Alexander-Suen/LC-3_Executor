@@ -1,4 +1,5 @@
 ﻿  LC3_Executor_v0.5.cpp
-E:\Projects\LC3_Executor\LC3_Executor_v0.5\LC3_Executor_v0.5\LC3_Executor_v0.5.cpp(255,40): warning C4244: 'argument': conversion from 'unsigned __int64' to 'int', possible loss of data
-E:\Projects\LC3_Executor\LC3_Executor_v0.5\LC3_Executor_v0.5\LC3_Executor_v0.5.cpp(276,82): warning C4244: '=': conversion from 'unsigned __int64' to 'int', possible loss of data
-  LC3_Executor_v0.5.vcxproj -> E:\Projects\LC3_Executor\LC3_Executor_v0.5\x64\Debug\LC3_Executor_v0.5.exe
+E:\Coursewares\Introduction to Computing Systems (short)\LC3_Executor\LC3_Executor_v0.5\LC3_Executor_v0.5\LC3_Executor_v0.5.cpp(268,40): warning C4244: 'argument': conversion from 'unsigned __int64' to 'int', possible loss of data
+E:\Coursewares\Introduction to Computing Systems (short)\LC3_Executor\LC3_Executor_v0.5\LC3_Executor_v0.5\LC3_Executor_v0.5.cpp(289,82): warning C4244: '=': conversion from 'unsigned __int64' to 'int', possible loss of data
+E:\Coursewares\Introduction to Computing Systems (short)\LC3_Executor\LC3_Executor_v0.5\LC3_Executor_v0.5\LC3_Executor_v0.5.cpp(70): warning C4715: 'GetCompNum': not all control paths return a value
+  LC3_Executor_v0.5.vcxproj -> E:\Coursewares\Introduction to Computing Systems (short)\LC3_Executor\LC3_Executor_v0.5\x64\Debug\LC3_Executor_v0.5.exe
