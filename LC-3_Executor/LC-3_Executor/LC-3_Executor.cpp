@@ -28,9 +28,11 @@ public:
 	uint16_t GetValue();
 	void PrintOutGPR(); // Print values of all general purpose registers.
 	void PrintOutCon(); // Print values of three single-bit condition code registers.
+	void SetConditionCode(uint16_t gpr_value);
+	uint16_t GetConditionCode(char ch);
 
 private:
-	uint16_t reg_number; // General purpose register identifier, uint8_t also works.
+	uint16_t reg_number; // register identifier for GPR or single-bit condition code registers, uint8_t also works.
 	uint16_t reg_value; // fixed 16-bit unsigned integer type
 };
 
@@ -48,10 +50,37 @@ Reg gpr_reg[8] = {
 
 // Condition code single-bit registers. Their value will be set as 0x0001 if the situation is set.
 Reg condition_reg[3] = {
-	Reg(0, 0x0000), // N
-	Reg(1, 0x0000), // Z
-	Reg(2, 0x0000)  // P
+	Reg(0, 0x0000), // N, condition_reg[0], condition code - 0x0000 / 0x0001
+	Reg(1, 0x0000), // Z, condition_reg[1], condition code
+	Reg(2, 0x0000)  // P, condition_reg[2], condition code
 };
+
+void Reg::SetConditionCode(uint16_t DR_value) {
+	int16_t DR_value_signed = DR_value;
+	printf("Unsigned DR value = x%04X, signed DR value = %d.\n", DR_value, DR_value_signed);
+	if (DR_value_signed < 0) { // N
+		std::cout << "condition code = N" << std::endl;
+		condition_reg[0].SetValue(0x0001);
+	} else if (DR_value_signed == 0) { // Z
+		std::cout << "condition code = Z" << std::endl;
+		condition_reg[1].SetValue(0x0001);
+	} else { // P
+		std::cout << "condition code = P" << std::endl;
+		condition_reg[2].SetValue(0x0001);
+	}
+}
+
+uint16_t Reg::GetConditionCode(char ch) {
+	if (ch == 'N') {
+		return 0x0000;
+	} else if (ch == 'Z') {
+		return 0x0001;
+	} else if (ch == 'P') {
+		return 0x0002;
+	} else {
+		return 0x0003; // not defined
+	}
+}
 
 Reg::Reg(uint16_t register_number, uint16_t register_value) {
 	reg_number = register_number;
@@ -105,7 +134,7 @@ uint16_t GetNum(std::string str) {
 }
 
 int main() {
-	std::cout << "Hello, LC-3 executor!" << std::endl;
+	//std::cout << "Hello, LC-3 executor!" << std::endl;
 
 	uint16_t DR_value = 0x0000;
 	uint16_t SR1_value = 0x0000;
@@ -149,26 +178,33 @@ int main() {
 		switch (OpcodeHash(instr[array_index])) {
 		case 0: // BR (0000)
 			std::cout << "BR:" << std::endl;
+			//uint16_t condition_code = 
+
+
+
+
+
+
 			//condition_code = GetCondition(ins_count, instruction, registers); // Get condition code
 			//PCoffset9 = GetCompNum(instruction[ins_count].substr(7, 9));
-			////cout << "BR: PCoffset9 = " << PCoffset9 << endl;
-			////cout << "instruction[ins_count] = " << instruction[ins_count] << endl;
-			//// trace back to find the conditional code of last instruction
+			//cout << "BR: PCoffset9 = " << PCoffset9 << endl;
+			//cout << "instruction[ins_count] = " << instruction[ins_count] << endl;
+			// trace back to find the conditional code of last instruction
 
-			//// BR n z p
-			//if (instruction[ins_count][4] == '1') { // BRn
+			// BR n z p
+			//if (instr[array_index][4] == '1') { // BRn
 			//	//cout << "BRn" << endl;
 			//	if (condition_code == -1) {
 			//		ins_count += PCoffset9;
 			//	}
 			//}
-			//else if (instruction[ins_count][5] == '1') { // BRz
+			//else if (instr[array_index][5] == '1') { // BRz
 			// //cout << "BRz" << endl;
 			//	if (condition_code == 0) {
 			//		ins_count += PCoffset9;
 			//	}
 			//}
-			//else if (instruction[ins_count][6] == '1') { // BRp
+			//else if (instr[array_index][6] == '1') { // BRp
 			// //cout << "BRp" << endl;
 			//	if (condition_code == 1) {
 			//		ins_count += PCoffset9;
@@ -186,16 +222,17 @@ int main() {
 			SR1_value = GetNum(instr[array_index].substr(7, 3));
 
 			if (instr[array_index][10] == '1') { // if str[10] == '1'
-				imm5 = GetNum(SEXT(instr[array_index].substr(11, 5))); // convert 16-bit number to 
-				std::cout << instr[array_index].substr(11, 5) << " " << SEXT(instr[array_index].substr(11, 5)) << std::endl;
-				printf("imm5 = x%04X\n", imm5);
-
-				gpr_reg[DR_value].SetValue(gpr_reg[SR1_value].GetValue() + imm5);
+				imm5 = GetNum(SEXT(instr[array_index].substr(11, 5))); // imm5 SEXT
+				//std::cout << instr[array_index].substr(11, 5) << " " << SEXT(instr[array_index].substr(11, 5)) << std::endl;
+				//printf("imm5 = x%04X\n", imm5);
+				gpr_reg[DR_value].SetValue(gpr_reg[SR1_value].GetValue() + imm5); // SEXT + imm5
 			}
 			else { // str[10] == '0'
 				SR2_value = GetNum(instr[array_index].substr(13, 3));
 				gpr_reg[DR_value].SetValue(gpr_reg[SR1_value].GetValue() + gpr_reg[SR2_value].GetValue());
 			}
+			condition_reg[0].SetConditionCode(DR_value);
+			condition_reg[0].PrintOutCon();
 			break;
 		case 2: // LD (0010)
 			std::cout << "LD:" << std::endl;
@@ -232,17 +269,21 @@ int main() {
 			break;
 		case 5: // AND (0101)
 			std::cout << "AND" << std::endl;
-			//DR_num = GetNum(instruction[ins_count].substr(4, 3));
-			//SR1_num = GetNum(instruction[ins_count].substr(7, 3));
-			//if (instruction[ins_count][10] == '1') { // if str[10] == '1'
-			//	imm5 = GetNum(instruction[ins_count].substr(11, 5));
-			//	//cout << imm5 << endl;
-			//	registers[DR_num].SetValue(registers[SR1_num].GetValue(SR1_num) & imm5);
-			//}
-			//else { // str[10] == '0'
-			//	SR2_num = GetNum(instruction[ins_count].substr(13, 3));
-			//	registers[DR_num].SetValue(registers[SR1_num].GetValue(SR1_num) & registers[SR2_num].GetValue(SR2_num));
-			//}
+			DR_value = GetNum(instr[array_index].substr(4, 3));
+			SR1_value = GetNum(instr[array_index].substr(7, 3));
+
+			if (instr[array_index][10] == '1') { // if str[10] == '1'
+				imm5 = GetNum(SEXT(instr[array_index].substr(11, 5))); // imm5 SEXT
+				//std::cout << instr[array_index].substr(11, 5) << " " << SEXT(instr[array_index].substr(11, 5)) << std::endl;
+				//printf("imm5 = x%04X\n", imm5);
+				gpr_reg[DR_value].SetValue(gpr_reg[SR1_value].GetValue() + imm5); // SEXT + imm5
+			}
+			else { // str[10] == '0'
+				SR2_value = GetNum(instr[array_index].substr(13, 3));
+				gpr_reg[DR_value].SetValue(gpr_reg[SR1_value].GetValue() & gpr_reg[SR2_value].GetValue()); // bit-wise AND operation
+			}
+			condition_reg[0].SetConditionCode(DR_value);
+			condition_reg[0].PrintOutCon();
 			break;
 		case 6: // LDR (0110)
 			std::cout << "LDR" << std::endl;
@@ -267,10 +308,11 @@ int main() {
 			break;
 		case 9: // NOT (1001)
 			std::cout << "NOT:" << std::endl;
-			//DR_num = GetNum(instruction[ins_count].substr(4, 3));
-			//SR1_num = GetNum(instruction[ins_count].substr(7, 3));
-			////cout << DR_num << endl << SR_num << endl;
-			//registers[DR_num].SetValue(~registers[SR1_num].GetValue(SR1_num));
+			DR_value = GetNum(instr[array_index].substr(4, 3));
+			SR1_value = GetNum(instr[array_index].substr(7, 3));
+			gpr_reg[DR_value].SetValue(~gpr_reg[SR1_value].GetValue());
+			condition_reg[0].SetConditionCode(DR_value);
+			condition_reg[0].PrintOutCon();
 			break;
 		case 10: // LDI (1010)
 			std::cout << "LDI:" << std::endl;
