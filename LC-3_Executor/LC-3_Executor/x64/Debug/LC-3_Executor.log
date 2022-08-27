@@ -1,2 +1,5 @@
 ﻿  LC-3_Executor.cpp
+E:\Coursewares\Introduction to Computing Systems (short)\LC3_Executor\LC-3_Executor\LC-3_Executor\LC-3_Executor.cpp(257,37): warning C4244: 'argument': conversion from 'unsigned __int64' to 'uint16_t', possible loss of data
+E:\Coursewares\Introduction to Computing Systems (short)\LC3_Executor\LC-3_Executor\LC-3_Executor\LC-3_Executor.cpp(311,37): warning C4244: 'argument': conversion from 'unsigned __int64' to 'uint16_t', possible loss of data
+E:\Coursewares\Introduction to Computing Systems (short)\LC3_Executor\LC-3_Executor\LC-3_Executor\LC-3_Executor.cpp(336,37): warning C4244: 'argument': conversion from 'unsigned __int64' to 'uint16_t', possible loss of data
   LC-3_Executor.vcxproj -> E:\Coursewares\Introduction to Computing Systems (short)\LC3_Executor\LC-3_Executor\x64\Debug\LC-3_Executor.exe

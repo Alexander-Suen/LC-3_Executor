@@ -29,6 +29,7 @@ public:
 	void PrintOutGPR(); // Print values of all general purpose registers.
 	void PrintOutCon(); // Print values of three single-bit condition code registers.
 	void SetConditionCode(uint16_t gpr_value);
+	void ClearConditionCode();
 	uint16_t GetConditionCode(char ch);
 
 private:
@@ -70,6 +71,13 @@ void Reg::SetConditionCode(uint16_t DR_value) {
 	}
 }
 
+// Clear three single-bit condition code before setting new condition codes for each new instruction.
+void Reg::ClearConditionCode() {
+	for (int i = 0; i < 3; i++) {
+		condition_reg[i].SetValue(0x0000);
+	}
+}
+
 uint16_t Reg::GetConditionCode(char ch) {
 	if (ch == 'N') {
 		return 0x0000;
@@ -107,6 +115,7 @@ void Reg::PrintOutCon() {
 	for (int i = 0; i < 3; i++) {
 		printf("R%d = x%04hX\n", i, condition_reg[i].GetValue());
 	}
+	std::cout << std::endl;
 }
 
 uint16_t OpcodeHash(std::string instruction) {
@@ -133,13 +142,20 @@ uint16_t GetNum(std::string str) {
 	return sum_num;
 }
 
+uint16_t StringToUnsigned(std::string instr) {
+	uint16_t sum_num = 0;
+
+	return 0x0001;
+
+}
+
 int main() {
 	//std::cout << "Hello, LC-3 executor!" << std::endl;
 
-	uint16_t DR_value = 0x0000;
-	uint16_t SR1_value = 0x0000;
-	uint16_t SR2_value = 0x0000;
-	uint16_t BaseR_value = 0x0000;
+	uint16_t DR_num = 0x0000;
+	uint16_t SR1_num = 0x0000;
+	uint16_t SR2_num = 0x0000;
+	uint16_t BaseR_num = 0x0000; // 
 
 	uint16_t imm5 = 0x0000; // unsigned, SEXT
 	uint16_t offset6 = 0x0000; // unsigned, SEXT
@@ -178,71 +194,67 @@ int main() {
 		switch (OpcodeHash(instr[array_index])) {
 		case 0: // BR (0000)
 			std::cout << "BR:" << std::endl;
-			//uint16_t condition_code = 
-
-
-
-
-
-
-			//condition_code = GetCondition(ins_count, instruction, registers); // Get condition code
-			//PCoffset9 = GetCompNum(instruction[ins_count].substr(7, 9));
-			//cout << "BR: PCoffset9 = " << PCoffset9 << endl;
-			//cout << "instruction[ins_count] = " << instruction[ins_count] << endl;
-			// trace back to find the conditional code of last instruction
-
+			offset9 = GetNum(SEXT(instr[array_index].substr(7, 9)));
+			//printf("offset9 = x%04X\n", offset9);
+			//std::cout << "instr[array_index] = " << instr[array_index] << std::endl;
+			PCoffset9 = offset9 + PC; // the address of the next instruction to be executed
+			
+			// trace back to find the last conditional code
 			// BR n z p
-			//if (instr[array_index][4] == '1') { // BRn
-			//	//cout << "BRn" << endl;
-			//	if (condition_code == -1) {
-			//		ins_count += PCoffset9;
-			//	}
-			//}
-			//else if (instr[array_index][5] == '1') { // BRz
-			// //cout << "BRz" << endl;
-			//	if (condition_code == 0) {
-			//		ins_count += PCoffset9;
-			//	}
-			//}
-			//else if (instr[array_index][6] == '1') { // BRp
-			// //cout << "BRp" << endl;
-			//	if (condition_code == 1) {
-			//		ins_count += PCoffset9;
-			//	}
-			//}
-			//else { // n, z, p = 0, 0, 0, unconditionally branch
-			// //cout << "BRnzp" << endl;
-			//	ins_count += PCoffset9; // PC is implemented in "ins_count++"
-			//}
+			if (instr[array_index][4] == '1') { // BRn
+				std::cout << "BRn" << std::endl;
+				if (condition_reg[0].GetValue() == 0x0001) { // condition code register N: condition_reg[0]
+					PC = PC + offset9; 
+				}
+			}
+			else if (instr[array_index][5] == '1') { // BRz
+			 //cout << "BRz" << endl;
+				if (condition_reg[1].GetValue() == 0x0001) {
+					PC = PC + offset9;
+				}
+			}
+			else if (instr[array_index][6] == '1') { // BRp
+			 //cout << "BRp" << endl;
+				if (condition_reg[2].GetValue() == 0x0001) {
+					PC = PC + offset9;
+				}
+			}
+			else { // n, z, p = 0, 0, 0, unconditionally branch
+			 //cout << "BRnzp" << endl;
+				PC = PC + offset9;
+			}
 
 			break;
 		case 1: // ADD (0001)
 			std::cout << "ADD:" << std::endl;
-			DR_value = GetNum(instr[array_index].substr(4, 3));
-			SR1_value = GetNum(instr[array_index].substr(7, 3));
+			DR_num = GetNum(instr[array_index].substr(4, 3));
+			SR1_num = GetNum(instr[array_index].substr(7, 3));
 
 			if (instr[array_index][10] == '1') { // if str[10] == '1'
 				imm5 = GetNum(SEXT(instr[array_index].substr(11, 5))); // imm5 SEXT
 				//std::cout << instr[array_index].substr(11, 5) << " " << SEXT(instr[array_index].substr(11, 5)) << std::endl;
 				//printf("imm5 = x%04X\n", imm5);
-				gpr_reg[DR_value].SetValue(gpr_reg[SR1_value].GetValue() + imm5); // SEXT + imm5
+				gpr_reg[DR_num].SetValue(gpr_reg[SR1_num].GetValue() + imm5); // SEXT + imm5
 			}
 			else { // str[10] == '0'
-				SR2_value = GetNum(instr[array_index].substr(13, 3));
-				gpr_reg[DR_value].SetValue(gpr_reg[SR1_value].GetValue() + gpr_reg[SR2_value].GetValue());
+				SR2_num = GetNum(instr[array_index].substr(13, 3));
+				gpr_reg[DR_num].SetValue(gpr_reg[SR1_num].GetValue() + gpr_reg[SR2_num].GetValue());
 			}
-			condition_reg[0].SetConditionCode(DR_value);
+			// Set condition code
+			condition_reg[0].ClearConditionCode();
+			condition_reg[0].SetConditionCode(gpr_reg[DR_num].GetValue());
 			condition_reg[0].PrintOutCon();
 			break;
 		case 2: // LD (0010)
 			std::cout << "LD:" << std::endl;
-			//DR_num = GetNum(instruction[ins_count].substr(4, 3));
-			//PCoffset9 = GetNum(instruction[ins_count].substr(7, 9));
-			////cout << "LD: PCoffset9 = " << PCoffset9 << ", ins_count = " << ins_count << endl;
-			////cout << "LD: instruction[ins_count + PCoffset9 + 1] = " << instruction[ins_count + PCoffset9 + 1] << endl;
-			////cout << "LD: GetNum(instruction[ins_count + PCoffset9 + 1]) = " <<
-			////	GetNum(instruction[ins_count + PCoffset9 + 1]) << endl;
-			//registers[DR_num].SetValue(GetNum(instruction[ins_count + PCoffset9 + 1]));
+			DR_num = GetNum(instr[array_index].substr(4, 3));
+			offset9 = GetNum(SEXT(instr[array_index].substr(7, 9)));
+			PCoffset9 = PC + offset9;
+			//cout << "LD: PCoffset9 = " << PCoffset9 << ", ins_count = " << ins_count << endl;
+			//cout << "LD: instruction[ins_count + PCoffset9 + 1] = " << instruction[ins_count + PCoffset9 + 1] << endl;
+			//cout << "LD: GetNum(instruction[ins_count + PCoffset9 + 1]) = " <<
+			//	GetNum(instruction[ins_count + PCoffset9 + 1]) << endl;
+			gpr_reg[DR_num].SetValue(strtoull(instr[PCoffset9 - DEFAULT_MEMORY].c_str(), NULL, 2)); // Convert the string to an unsigned int and set its value.
 			break;
 		case 3: // ST (0011)
 			std::cout << "ST:" << std::endl;
@@ -253,51 +265,50 @@ int main() {
 		case 4: // JSR_JSRR (0100)
 			std::cout << "JSR_JSRR:" << std::endl;
 
-			//if (instruction[ins_count][4] == '1') { // JSR
-			//	PCoffset11 = GetNum(instruction[ins_count].substr(5, 11));
-			//	//cout << "PCoffset11 = " << PCoffset11 << endl;
-			//	registers[7].SetValue(0x7777 + ins_count + 1);
-			//	ins_count += PCoffset11;
-
-			//}
-			//else { // instruction[ins_count][4] == '0', JSRR
-			//	BaseR = GetNum(instruction[ins_count].substr(7, 3));
-			//	//cout << "BaseR = " << BaseR << endl;
-			//	registers[7].SetValue(0x7777 + ins_count + 1);
-			//	ins_count = registers[BaseR].GetValue(BaseR) - 0x7777 - 1; // No PC
-			//}
+			if (instr[array_index][4] == '1') { // JSR
+				offset11 = GetNum(SEXT(instr[array_index].substr(5, 11)));
+				gpr_reg[7].SetValue(array_index + DEFAULT_MEMORY + 0x0001); // put the address of the instruction following JSR into R7
+				PC = PC + offset11; // jump to PCoffset11
+			}
+			else { // instr[array_index][4] == '0', JSRR
+				BaseR_num = GetNum(instr[array_index].substr(7, 3));
+				//cout << "BaseR = " << BaseR << endl;
+				gpr_reg[7].SetValue(array_index + DEFAULT_MEMORY + 0x0001);
+				PC = gpr_reg[BaseR_num].GetValue(); // jump to the address contained in PC (value in BaseR)
+			}
 			break;
 		case 5: // AND (0101)
 			std::cout << "AND" << std::endl;
-			DR_value = GetNum(instr[array_index].substr(4, 3));
-			SR1_value = GetNum(instr[array_index].substr(7, 3));
+			DR_num = GetNum(instr[array_index].substr(4, 3));
+			SR1_num = GetNum(instr[array_index].substr(7, 3));
 
 			if (instr[array_index][10] == '1') { // if str[10] == '1'
 				imm5 = GetNum(SEXT(instr[array_index].substr(11, 5))); // imm5 SEXT
 				//std::cout << instr[array_index].substr(11, 5) << " " << SEXT(instr[array_index].substr(11, 5)) << std::endl;
 				//printf("imm5 = x%04X\n", imm5);
-				gpr_reg[DR_value].SetValue(gpr_reg[SR1_value].GetValue() + imm5); // SEXT + imm5
+				gpr_reg[DR_num].SetValue(gpr_reg[SR1_num].GetValue() + imm5); // SEXT + imm5
 			}
 			else { // str[10] == '0'
-				SR2_value = GetNum(instr[array_index].substr(13, 3));
-				gpr_reg[DR_value].SetValue(gpr_reg[SR1_value].GetValue() & gpr_reg[SR2_value].GetValue()); // bit-wise AND operation
+				SR2_num = GetNum(instr[array_index].substr(13, 3));
+				gpr_reg[DR_num].SetValue(gpr_reg[SR1_num].GetValue() & gpr_reg[SR2_num].GetValue()); // bit-wise AND operation
 			}
-			condition_reg[0].SetConditionCode(DR_value);
+
+			condition_reg[0].ClearConditionCode();
+			condition_reg[0].SetConditionCode(gpr_reg[DR_num].GetValue());
 			condition_reg[0].PrintOutCon();
 			break;
 		case 6: // LDR (0110)
 			std::cout << "LDR" << std::endl;
+			DR_num = GetNum(instr[array_index].substr(4, 3));
+			offset6 = GetNum(SEXT(instr[array_index].substr(10, 6)));
+			BaseR_num = GetNum(instr[array_index].substr(7, 3));
 
-			//DR_num = GetNum(instruction[ins_count].substr(4, 3));
-			//BaseR = GetNum(instruction[ins_count].substr(7, 3));
-			//offset6 = GetNum(instruction[ins_count].substr(10, 6));
-			////cout << "LDR: DR_num = " << DR_num << ", BaseR = " << BaseR << ", offset6 = " << offset6 << endl;
-			////printf("LDR: R2 value = x%04X\n", registers[BaseR].GetValue(BaseR)); // format print
-			////cout << "LDR: instruction[ins_count + registers[BaseR].GetValue(BaseR) + offset6 - 0x7777] = " <<
-			////	instruction[ins_count + registers[BaseR].GetValue(BaseR) + offset6 - 0x7777] << endl;
-			////cout << "LDR: R2 value = " << registers[BaseR].GetValue(BaseR) << endl;
-			//// Convert 16-bit string to int (hexadecimal) by "strtoull(string.c_str(), NULL, 2)
-			//registers[DR_num].SetValue(strtoull(instruction[ins_count + registers[BaseR].GetValue(BaseR) + offset6 - 0x7777].c_str(), NULL, 2));
+			//std::cout << "LDR: DR_num = " << DR_num << ", offset6 = ";
+			//printf("x%04X", offset6);
+			//std::cout << ", BaseR_num = " << BaseR_num << std::endl;
+			//std::cout << "LDR: instr = " << instr[gpr_reg[BaseR_num].GetValue() + offset6 - DEFAULT_MEMORY] << std::endl;
+			//std::cout << "LDR: strtoull = " << strtoull(instr[gpr_reg[BaseR_num].GetValue() + offset6 - DEFAULT_MEMORY].c_str(), NULL, 2) << std::endl;
+			gpr_reg[DR_num].SetValue(strtoull(instr[gpr_reg[BaseR_num].GetValue() + offset6 - DEFAULT_MEMORY].c_str(), NULL, 2));
 			break;
 		case 7: // STR (0111)
 			std::cout << "STR:" << std::endl;
@@ -308,23 +319,22 @@ int main() {
 			break;
 		case 9: // NOT (1001)
 			std::cout << "NOT:" << std::endl;
-			DR_value = GetNum(instr[array_index].substr(4, 3));
-			SR1_value = GetNum(instr[array_index].substr(7, 3));
-			gpr_reg[DR_value].SetValue(~gpr_reg[SR1_value].GetValue());
-			condition_reg[0].SetConditionCode(DR_value);
+			DR_num = GetNum(instr[array_index].substr(4, 3));
+			SR1_num = GetNum(instr[array_index].substr(7, 3));
+			gpr_reg[DR_num].SetValue(~gpr_reg[SR1_num].GetValue());
+
+			condition_reg[0].ClearConditionCode();
+			condition_reg[0].SetConditionCode(gpr_reg[DR_num].GetValue());
 			condition_reg[0].PrintOutCon();
 			break;
 		case 10: // LDI (1010)
 			std::cout << "LDI:" << std::endl;
-			//DR_num = GetNum(instruction[ins_count].substr(4, 3));
-			//PCoffset9 = GetNum(instruction[ins_count].substr(7, 9));
-			////cout << "LDI: PCoffset9 = " << PCoffset9 << ", ins_count = " << ins_count << endl;
-			////cout << "LDI: instruction[ins_count + PCoffset9 + 1] = " << instruction[ins_count + PCoffset9 + 1] << endl;
-			////cout << "LDI: GetNum(instruction[ins_count + PCoffset9 + 1]) = " << GetNum(instruction[ins_count + PCoffset9 + 1]) << endl; // Error: 
-			////cout << "LDI: strtoull(str.c_str(), NULL, 2) = " << strtoull(instruction[ins_count + PCoffset9 + 1].c_str(), NULL, 2) << endl;
-			//incre_num = strtoull(instruction[ins_count + PCoffset9 + 1].c_str(), NULL, 2) - 0x7777; // get relative address
-			////cout << "LDI: strtoull(str.c_str(), NULL, 2) = " << incre_num << endl; // increment number
-			//registers[DR_num].SetValue(GetNum(instruction[ins_count + incre_num])); // Load address indirectly
+			DR_num = GetNum(instr[array_index].substr(4, 3));
+			offset9 = GetNum(SEXT(instr[array_index].substr(7, 9)));
+			PCoffset9 = PC + offset9; 
+
+			gpr_reg[DR_num].SetValue(strtoull(instr[strtoull(instr[PCoffset9 - DEFAULT_MEMORY].c_str(), NULL, 2)
+				- DEFAULT_MEMORY].c_str(), NULL, 2));
 			break;
 		case 11: // STI (1011)
 			std::cout << "STI:" << std::endl;
@@ -332,20 +342,22 @@ int main() {
 			break;
 		case 12: // JMP, RET (1100)
 			std::cout << "JMP, RET:" << std::endl;
-			//BaseR = GetNum(instruction[ins_count].substr(7, 3));
-			////cout << "BaseR = " << BaseR << endl;
-			//ins_count = ins_count + registers[BaseR].GetValue(BaseR) - 0x7777 - 2;
-			////cout << "ins_count = " << ins_count << endl;
+			BaseR_num = GetNum(instr[array_index].substr(7, 3));
+			//std::cout << "BaseR = " << BaseR_num << std::endl;
+			//printf("JMP: PC = x%04X, gpr_reg[BaseR_num].GetValue() = x%04X\n", PC, gpr_reg[BaseR_num].GetValue());
+			PC = gpr_reg[BaseR_num].GetValue();
+			//printf("JMP: PC = x%04X\n", PC);
 			break;
 		case 13: // reserved (1101)
 			std::cout << "Reserved, 1101" << std::endl;
 			break;
 		case 14: // LEA (1110), load effect address
 			std::cout << "LEA:" << std::endl;
-			//DR_num = GetNum(instruction[ins_count].substr(4, 3));
-			//PCoffset9 = GetNum(instruction[ins_count].substr(7, 9));
-			////cout << "LEA: DR_num = " << DR_num << ", PCoffset9 = " << PCoffset9 << endl;
-			//registers[DR_num].SetValue(0x7777 + ins_count + PCoffset9);
+			DR_num = GetNum(instr[array_index].substr(4, 3));
+			offset9 = GetNum(SEXT(instr[array_index].substr(7, 9)));
+			PCoffset9 = PC + offset9;
+			printf("DR_num = %d, offset9 = x%04X, PCoffset9 = x%04X\n", DR_num, offset9, PCoffset9);
+			gpr_reg[DR_num].SetValue(PCoffset9);
 			break;
 		case 15:
 			gpr_reg[0].PrintOutGPR();
