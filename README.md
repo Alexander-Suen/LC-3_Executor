@@ -5,7 +5,7 @@ LC-3 Executor is a C++ program that executes LC-3 assembly instructions. It is d
 
 ## Author
 
-Minghao Sun 
+Alexander Suen
 
 Contact: b.sun.med@gmail.com
 
